@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Client;
@@ -15,9 +17,12 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.FileUtils;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.testobject.piranha.TestObjectDevice.DeviceContainer;
 
@@ -68,17 +73,19 @@ public class TestObjectPiranha {
 		// TestObjectPiranha(capabilities);
 		// testObjectPiranha.close();
 
-		for (TestObjectDevice device : listDevices()) {
-			System.out.println(device);
-		}
+		// for (TestObjectDevice device : listDevices()) {
+		// System.out.println(device);
+		// }
+
 	}
 
 	private final String baseUrl;
+	private final AtomicBoolean isOpen = new AtomicBoolean(true);
 
 	private String sessionId;
 	private Proxy proxy;
 	private int port;
-
+	
 	public TestObjectPiranha(DesiredCapabilities desiredCapabilities) {
 		this(TESTOBJECT_BASE_URL, desiredCapabilities);
 	}
@@ -104,9 +111,38 @@ public class TestObjectPiranha {
 		}
 
 		startProxyServer(sessionId);
+		startKeepAlive(sessionId);
 	}
 
-	public void startProxyServer(String sessionId) {
+	private void startKeepAlive(final String sessionId) {
+
+		Executors.newFixedThreadPool(1).execute(new Runnable() {
+
+			@Override
+			public void run() {
+
+				while (isOpen.get() == true) {
+					try {
+						createWebTarget().path("session").path(sessionId).path("keepalive")
+								.request(MediaType.APPLICATION_JSON)
+								.post(Entity.entity("", MediaType.APPLICATION_JSON), String.class);
+					} catch (Exception e) {
+						System.out.println("KeepAlive exception " + e);
+					}
+
+					try {
+						Thread.sleep(10 * 1000);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				
+			}
+
+		});
+	}
+
+	private void startProxyServer(String sessionId) {
 		port = findFreePort();
 
 		proxy = new Proxy(port, baseUrl + "piranha", sessionId);
@@ -116,7 +152,7 @@ public class TestObjectPiranha {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public String getSessionId() {
 		return sessionId;
 	}
@@ -143,7 +179,7 @@ public class TestObjectPiranha {
 		throw new RuntimeException(response);
 	}
 
-	private Map<String, String> jsonToMap(String json) {
+	private static Map<String, String> jsonToMap(String json) {
 		Gson gson = new Gson();
 		Type stringStringMap = new TypeToken<Map<String, String>>() {
 		}.getType();
@@ -151,6 +187,7 @@ public class TestObjectPiranha {
 	}
 
 	public void close() {
+		isOpen.set(false);
 		deleteSession();
 
 		try {
@@ -205,6 +242,28 @@ public class TestObjectPiranha {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static String regenerateApiKey(String user, String password, String project) {
+
+		ClientConfig clientConfig = new ClientConfig();
+		clientConfig.connectorProvider(new ApacheConnectorProvider());
+		Client client = ClientBuilder.newClient(clientConfig);
+
+		WebTarget target = client.target(TESTOBJECT_BASE_URL + "rest");
+
+		Form form = new Form();
+		form.param("user", user);
+		form.param("password", password);
+
+		target.path("users").path("login").request(MediaType.APPLICATION_JSON_TYPE)
+				.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
+
+		String apiKeyResponse = target.path("users").path("testobject").path("projects").path(project)
+				.path("apiKey/appium").request(MediaType.APPLICATION_JSON_TYPE)
+				.post(Entity.entity("", MediaType.APPLICATION_JSON_TYPE), String.class);
+
+		return jsonToMap(apiKeyResponse).get("id");
 	}
 
 	public static List<TestObjectDevice> listDevices() {
