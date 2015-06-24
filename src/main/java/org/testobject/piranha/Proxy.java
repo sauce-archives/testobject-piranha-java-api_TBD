@@ -2,17 +2,16 @@ package org.testobject.piranha;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 public class Proxy extends NanoHTTPD {
 
-	private final String baseUrl;
-	private final String sessionId;
+	private final WebTarget webTarget;
 
 	public Proxy(int port, String baseUrl, String sessionId) {
 		super(port);
-		this.baseUrl = baseUrl;
-		this.sessionId = sessionId;
+		this.webTarget = ClientBuilder.newClient().target(baseUrl).path("session").path(sessionId);
 	}
 
 	@Override
@@ -20,9 +19,7 @@ public class Proxy extends NanoHTTPD {
 
 		String command = session.readBody();
 
-		String response = ClientBuilder.newClient().target(baseUrl).path("session").path(sessionId)
-				.request("application/json-rpc")
-				.post(Entity.entity(command, MediaType.APPLICATION_FORM_URLENCODED), String.class);
+		String response = webTarget.request("application/json-rpc").post(Entity.entity(command, MediaType.APPLICATION_FORM_URLENCODED), String.class);
 
 		return new NanoHTTPD.Response(Response.Status.OK, "application/json-rpc", response);
 	}

@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.InternalServerErrorException;
@@ -80,7 +82,10 @@ public class TestObjectPiranha {
 	}
 
 	private final String baseUrl;
-	private final AtomicBoolean isOpen = new AtomicBoolean(true);
+	private final Client client = ClientBuilder.newClient();
+	private final WebTarget webTarget;
+
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 	private String sessionId;
 	private Proxy proxy;
@@ -93,6 +98,7 @@ public class TestObjectPiranha {
 	public TestObjectPiranha(String baseUrl, DesiredCapabilities desiredCapabilities) {
 
 		this.baseUrl = baseUrl;
+		this.webTarget = client.target(baseUrl + "piranha");
 
 		Map<String, Map<String, String>> fullCapabilities = new HashMap<String, Map<String, String>>();
 		fullCapabilities.put("desiredCapabilities", desiredCapabilities.getCapabilities());
@@ -100,7 +106,7 @@ public class TestObjectPiranha {
 		String capsAsJson = new GsonBuilder().create().toJson(fullCapabilities);
 
 		try {
-			String response = createWebTarget().path("session").request(MediaType.TEXT_PLAIN)
+			String response = webTarget.path("session").request(MediaType.TEXT_PLAIN)
 					.post(Entity.entity(capsAsJson, MediaType.APPLICATION_JSON), String.class);
 
 			Map<String, String> map = jsonToMap(response);
@@ -115,31 +121,18 @@ public class TestObjectPiranha {
 	}
 
 	private void startKeepAlive(final String sessionId) {
-
-		Executors.newFixedThreadPool(1).execute(new Runnable() {
-
+		scheduler.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-
-				while (isOpen.get() == true) {
-					try {
-						createWebTarget().path("session").path(sessionId).path("keepalive")
-								.request(MediaType.APPLICATION_JSON)
-								.post(Entity.entity("", MediaType.APPLICATION_JSON), String.class);
-					} catch (Exception e) {
-						System.out.println("KeepAlive exception " + e);
-					}
-
-					try {
-						Thread.sleep(10 * 1000);
-					} catch (InterruptedException e) {
-						throw new RuntimeException(e);
-					}
+				try {
+					webTarget.path("session").path(sessionId).path("keepalive")
+							.request(MediaType.APPLICATION_JSON)
+							.post(Entity.entity("", MediaType.APPLICATION_JSON), String.class);
+				} catch (Exception e) {
+					System.out.println("KeepAlive exception " + e);
 				}
-				
 			}
-
-		});
+		}, 10, 10, TimeUnit.SECONDS);
 	}
 
 	private void startProxyServer(String sessionId) {
@@ -187,7 +180,7 @@ public class TestObjectPiranha {
 	}
 
 	public void close() {
-		isOpen.set(false);
+		scheduler.shutdown();
 		deleteSession();
 
 		try {
@@ -200,16 +193,10 @@ public class TestObjectPiranha {
 
 	private void deleteSession() {
 		try {
-			createWebTarget().path("session/" + sessionId).request(MediaType.APPLICATION_JSON).delete();
+			webTarget.path("session/" + sessionId).request(MediaType.APPLICATION_JSON).delete();
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
 		}
-	}
-
-	private WebTarget createWebTarget() {
-		Client client = ClientBuilder.newClient();
-
-		return client.target(baseUrl + "piranha");
 	}
 
 	public static int uploadApp(String apiKey, File appFile) {
