@@ -85,6 +85,9 @@ public class TestObjectPiranha {
 	private Proxy proxy;
 	private int port;
 
+	private String liveViewURL;
+	private String testReportURL;
+
 	public TestObjectPiranha(DesiredCapabilities desiredCapabilities) {
 		this(TESTOBJECT_APP_BASE_URL, desiredCapabilities);
 	}
@@ -105,6 +108,8 @@ public class TestObjectPiranha {
 
 			Map<String, String> map = jsonToMap(response);
 			sessionId = map.get("sessionId");
+			liveViewURL = map.get("testLiveViewUrl");
+			testReportURL = map.get("testReportUrl");
 
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
@@ -170,6 +175,14 @@ public class TestObjectPiranha {
 		Gson gson = new Gson();
 		Type stringStringMap = new TypeToken<Map<String, String>>() {}.getType();
 		return gson.fromJson(json, stringStringMap);
+	}
+
+	public String getTestReportURL() {
+		return testReportURL;
+	}
+
+	public String getLiveViewURL() {
+		return liveViewURL;
 	}
 
 	public void close() {
