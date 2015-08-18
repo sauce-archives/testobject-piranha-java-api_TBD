@@ -82,11 +82,14 @@ public class TestObjectPiranha {
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 	private String sessionId;
+	private String testReportUrl;
+	private String testLiveViewUrl;
+
 	private Proxy proxy;
 	private int port;
 
 	public TestObjectPiranha(DesiredCapabilities desiredCapabilities) {
-		this(TESTOBJECT_APP_BASE_URL, desiredCapabilities);
+		this(TESTOBJECT_CITRIX_BASE_URL, desiredCapabilities);
 	}
 
 	public TestObjectPiranha(String baseUrl, DesiredCapabilities desiredCapabilities) {
@@ -105,13 +108,16 @@ public class TestObjectPiranha {
 
 			Map<String, String> map = jsonToMap(response);
 			sessionId = map.get("sessionId");
-
+			testReportUrl = map.get("testReportUrl");
+			testLiveViewUrl = map.get("testLiveViewUrl");
+			
+			startProxyServer(sessionId);
+			startKeepAlive(sessionId);
+			
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
 		}
 
-		startProxyServer(sessionId);
-		startKeepAlive(sessionId);
 	}
 
 	private void startKeepAlive(final String sessionId) {
@@ -142,6 +148,14 @@ public class TestObjectPiranha {
 
 	public String getSessionId() {
 		return sessionId;
+	}
+	
+	public String getTestReportUrl() {
+		return testReportUrl;
+	}
+
+	public String getTestLiveViewUrl() {
+		return testLiveViewUrl;
 	}
 
 	private static int findFreePort() {
