@@ -20,6 +20,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 public class TestObjectPiranha {
 
 	//	public static String TESTOBJECT_BASE_URL = "http://localhost:7070/";
@@ -79,7 +81,8 @@ public class TestObjectPiranha {
 	private final Client client = ClientBuilder.newClient();
 	private final WebTarget webTarget;
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, 
+			new ThreadFactoryBuilder().setNameFormat("Piranha keep-alive").build());
 
 	private String sessionId;
 	private Proxy proxy;
