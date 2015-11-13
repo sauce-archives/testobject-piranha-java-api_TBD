@@ -30,53 +30,6 @@ public class TestObjectPiranha {
 	public static String TESTOBJECT_CITRIX_BASE_URL = "https://citrix.testobject.com:443/api/";
 	//	public static String TESTOBJECT_BASE_URL = "http://branches.testobject.org/api/";
 
-	//	public static void main(String... args) throws IOException {
-	//
-	//		int bla = uploadApp("F09A1BE7F6C148DBB6E200AB8D2EDAF9", new File("/home/aluedeke/Downloads/billiger-de-resigned.ipa"));
-	//		System.out.println(bla);
-	//		 File appFile = new
-	//		 File("/home/leonti/development/citrix/ForTestObject/gotomeeting-5.0.799.1290-SNAPSHOT.apk");
-	//		 int id =
-	//		 TestObjectPiranha.uploadApp("42995311C3724F21A9266E24643DA754",
-	//		 appFile);
-	//		 System.out.println("App id is: " + id);
-	//
-	//		 File appFrameworkFile = new
-	//		 File("/home/leonti/development/citrix/ForTestObject/piranha-android-server-5.0.30-SNAPSHOT.apk");
-	//		 int id =
-	//		 TestObjectPiranha.uploadFrameworkApp("42995311C3724F21A9266E24643DA754",
-	//		 appFrameworkFile);
-	//		 System.out.println("Framework id is: " + id);
-	//
-	//		 DesiredCapabilities capabilities = new DesiredCapabilities();
-	//		 capabilities.setCapability("testobject_api_key",
-	//		 "42995311C3724F21A9266E24643DA754");
-	//		 capabilities.setCapability("testobject_app_id", "1");
-	//		 capabilities.setCapability("testobject_framework_app_id", "2");
-	//		 capabilities.setCapability("testobject_device",
-	//		 "Sony_Xperia_T_real");
-	//
-	//		 Map<String, String> piranhaCaps = new HashMap<String, String>();
-	//		 piranhaCaps.put("className",
-	//		 "com.citrixonline.universal.ui.activities.LauncherActivity");
-	//		 piranhaCaps.put("intent",
-	//		 "com.citrixonline.piranha.androidserver/com.citrixonline.piranha.androidserver.PiranhaAndroidInstrumentation");
-	//		 piranhaCaps.put("packageName",
-	//		 "com.citrixonline.android.gotomeeting");
-	//
-	//		 capabilities.setCapability("piranha_params", new
-	//		 GsonBuilder().create().toJson(piranhaCaps));
-	//
-	//		 TestObjectPiranha testObjectPiranha = new
-	//		 TestObjectPiranha(capabilities);
-	//		 testObjectPiranha.close();
-	//
-	//		 for (TestObjectDevice device : listDevices()) {
-	//		 System.out.println(device);
-	//		 }
-	//
-	//	}
-
 	private final String baseUrl;
 	private final Client client = ClientBuilder.newClient();
 	private final WebTarget webTarget;
@@ -202,6 +155,7 @@ public class TestObjectPiranha {
 
 	private void deleteSession() {
 		try {
+			System.out.println("[" + Thread.currentThread().getName() + "] deleting session '" + sessionId + "'");
 			webTarget.path("session/" + sessionId).request(MediaType.APPLICATION_JSON).delete();
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
