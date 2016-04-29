@@ -1,5 +1,16 @@
 package org.testobject.piranha;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.ServerSocket;
@@ -8,19 +19,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class TestObjectPiranha {
 
@@ -34,13 +32,13 @@ public class TestObjectPiranha {
 	private final Client client = ClientBuilder.newClient();
 	private final WebTarget webTarget;
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, 
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1,
 			new ThreadFactoryBuilder().setNameFormat("Piranha keep-alive").build());
 
 	private String sessionId;
 	private Proxy proxy;
 	private int port;
-
+	private String sessionInitResponse;
 	private String liveViewURL;
 	private String testReportURL;
 
@@ -62,10 +60,11 @@ public class TestObjectPiranha {
 			String response = webTarget.path("session").request(MediaType.TEXT_PLAIN)
 					.post(Entity.entity(capsAsJson, MediaType.APPLICATION_JSON), String.class);
 
-			Map<String, String> map = jsonToMap(response);
-			sessionId = map.get("sessionId");
-			liveViewURL = map.get("testLiveViewUrl");
-			testReportURL = map.get("testReportUrl");
+			Map<String, Object> map = jsonToMap(response);
+			sessionId = (String) map.get("sessionId");
+			liveViewURL = (String) map.get("testLiveViewUrl");
+			testReportURL = (String) map.get("testReportUrl");
+			setSessionInitResponse(response);
 
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
@@ -127,9 +126,10 @@ public class TestObjectPiranha {
 		throw new RuntimeException(response);
 	}
 
-	private static Map<String, String> jsonToMap(String json) {
+	private static Map<String, Object> jsonToMap(String json) {
 		Gson gson = new Gson();
-		Type stringStringMap = new TypeToken<Map<String, String>>() {}.getType();
+		Type stringStringMap = new TypeToken<Map<String, Object>>() {
+		}.getType();
 		return gson.fromJson(json, stringStringMap);
 	}
 
@@ -160,6 +160,14 @@ public class TestObjectPiranha {
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
 		}
+	}
+
+	public String getSessionInitResponse() {
+		return this.sessionInitResponse;
+	}
+
+	private void setSessionInitResponse(String sessionInitResponse) {
+		this.sessionInitResponse = sessionInitResponse;
 	}
 
 	public static TestObjectApi api() {

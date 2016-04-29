@@ -1,5 +1,17 @@
 package org.testobject.piranha;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.testobject.piranha.TestObjectDevice.DeviceContainer;
+
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,31 +20,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.testobject.piranha.TestObjectDevice.DeviceContainer;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 public class TestObjectApi {
 
 	private final String baseUrl;
 
 	public TestObjectApi(String baseUrl) {
 		this.baseUrl = baseUrl;
-	}	
+	}
+
 	
 	public List<TestObjectDevice> listDevices(String apiKey) {
 		HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.basicBuilder()
