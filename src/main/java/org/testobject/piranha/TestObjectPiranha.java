@@ -1,5 +1,16 @@
 package org.testobject.piranha;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.ServerSocket;
@@ -8,19 +19,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class TestObjectPiranha {
 
@@ -40,7 +38,7 @@ public class TestObjectPiranha {
 	private String sessionId;
 	private Proxy proxy;
 	private int port;
-
+	private String sessionInitResponse;
 	private String liveViewURL;
 	private String testReportURL;
     private String sessionInitresponse = null;
@@ -171,6 +169,14 @@ public class TestObjectPiranha {
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
 		}
+	}
+
+	public String getSessionInitResponse() {
+		return this.sessionInitResponse;
+	}
+
+	private void setSessionInitResponse(String sessionInitResponse) {
+		this.sessionInitResponse = sessionInitResponse;
 	}
 
 	public static TestObjectApi api() {
