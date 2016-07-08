@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.client.ClientProperties;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Client;
@@ -49,6 +50,10 @@ public class TestObjectPiranha {
 	public TestObjectPiranha(String baseUrl, DesiredCapabilities desiredCapabilities) {
 
 		this.baseUrl = baseUrl;
+
+		client.property(ClientProperties.CONNECT_TIMEOUT, 60*1000); // 1 minute
+		client.property(ClientProperties.READ_TIMEOUT,  5*60*1000); // 5 minutes
+
 		this.webTarget = client.target(baseUrl + "piranha");
 
 		Map<String, Map<String, Object>> fullCapabilities = new HashMap<String, Map<String, Object>>();
