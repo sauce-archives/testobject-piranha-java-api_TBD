@@ -51,7 +51,7 @@ public class TestObjectPiranha {
 		this.baseUrl = baseUrl;
 		this.webTarget = client.target(baseUrl + "piranha");
 
-		Map<String, Map<String, String>> fullCapabilities = new HashMap<String, Map<String, String>>();
+		Map<String, Map<String, Object>> fullCapabilities = new HashMap<String, Map<String, Object>>();
 		fullCapabilities.put("desiredCapabilities", desiredCapabilities.getCapabilities());
 
 		String capsAsJson = new GsonBuilder().create().toJson(fullCapabilities);
