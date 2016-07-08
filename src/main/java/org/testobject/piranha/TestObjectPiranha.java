@@ -41,6 +41,15 @@ public class TestObjectPiranha {
 	private String sessionInitResponse;
 	private String liveViewURL;
 	private String testReportURL;
+    private String sessionInitresponse = null;
+
+    public String getSessionInitresponse() {
+        return sessionInitresponse;
+    }
+
+    private void setSessionInitresponse(String sessionInitresponse) {
+        this.sessionInitresponse = sessionInitresponse;
+    }
 
 	public TestObjectPiranha(DesiredCapabilities desiredCapabilities) {
 		this(TESTOBJECT_APP_BASE_URL, desiredCapabilities);
@@ -60,11 +69,11 @@ public class TestObjectPiranha {
 			String response = webTarget.path("session").request(MediaType.TEXT_PLAIN)
 					.post(Entity.entity(capsAsJson, MediaType.APPLICATION_JSON), String.class);
 
-			Map<String, Object> map = jsonToMap(response);
-			sessionId = (String) map.get("sessionId");
-			liveViewURL = (String) map.get("testLiveViewUrl");
-			testReportURL = (String) map.get("testReportUrl");
-			setSessionInitResponse(response);
+            Map<String, Object> map = jsonToMap(response);
+            sessionId = (String) map.get("sessionId");
+            liveViewURL = (String) map.get("testLiveViewUrl");
+            testReportURL = (String) map.get("testReportUrl");
+            setSessionInitresponse(response);
 
 		} catch (InternalServerErrorException e) {
 			rethrow(e);
@@ -126,12 +135,12 @@ public class TestObjectPiranha {
 		throw new RuntimeException(response);
 	}
 
-	private static Map<String, Object> jsonToMap(String json) {
-		Gson gson = new Gson();
-		Type stringStringMap = new TypeToken<Map<String, Object>>() {
-		}.getType();
-		return gson.fromJson(json, stringStringMap);
-	}
+    private static Map<String, Object> jsonToMap(String json) {
+        Gson gson = new Gson();
+        Type stringStringMap = new TypeToken<Map<String, Object>>() {
+        }.getType();
+        return gson.fromJson(json, stringStringMap);
+    }
 
 	public String getTestReportURL() {
 		return testReportURL;
